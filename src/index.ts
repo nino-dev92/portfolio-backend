@@ -23,6 +23,8 @@ const main = async (
     },
   });
 
+  await transporter.verify();
+
   const info = await transporter.sendMail({
     from: process.env.EMAIL,
     to: "nnejirichard@yahoo.com",
@@ -33,10 +35,16 @@ const main = async (
   console.log("Message sent: %s", info.messageId);
 };
 
-app.post("/send-email", (req: Request, res: Response) => {
-  const { name, email, message } = req.body;
-  main(name, email, message);
-  res.send("Email sent successfully!");
+app.post("/send-email", async (req: Request, res: Response) => {
+  try {
+    const { name, email, message } = req.body;
+    console.log(name, email, message);
+    await main(name, email, message);
+    res.status(200).json({ message: "Email sent successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to send email");
+  }
 });
 
 app.get("/", (req: Request, res: Response) => {
@@ -44,5 +52,5 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.listen(PORT, () => {
-  console.log("Server is running on port 3000");
+  console.log(`Server is running on port ${PORT}`);
 });
