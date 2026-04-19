@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 app.use(cors());
 app.use(express.json());
@@ -15,32 +16,47 @@ const main = async (
   email: string,
   message: string,
 ): Promise<void> => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASS,
-    },
-  });
+  // const transporter = nodemailer.createTransport({
+  //   service: "gmail",
+  //   auth: {
+  //     user: process.env.EMAIL,
+  //     pass: process.env.PASS,
+  //   },
+  // });
 
-  await transporter.verify();
+  // await transporter.verify();
 
-  const info = await transporter.sendMail({
-    from: process.env.EMAIL,
+  // const info = await transporter.sendMail({
+  //   from: process.env.EMAIL,
+  //   to: "nnejirichard@yahoo.com",
+  //   subject: "Portfolio Message ✔",
+  //   text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+  // });
+
+  // console.log("Message sent: %s", info.messageId);
+
+  const resend = new Resend("re_EACEjN7J_AAZW9eio6E2m3sA1AdgdQb74");
+
+  let res = await resend.emails.send({
+    from: "Onboarding <onboarding@resend.dev>",
     to: "nnejirichard@yahoo.com",
-    subject: "Portfolio Message ✔",
-    text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+    subject: "Contact Form Details",
+    html: `<div>
+        <p>Name: ${name}</p>
+        <p>Email: ${email}</p>
+        <p> ${message}</p>
+        <p>Message: ${message}</p>     
+  </div>`,
   });
-
-  console.log("Message sent: %s", info.messageId);
 };
 
 app.post("/send-email", async (req: Request, res: Response) => {
   try {
     const { name, email, message } = req.body;
     console.log(name, email, message);
-    await main(name, email, message);
-    res.status(200).json({ message: "Email sent successfully!" });
+    await main(name, email, message).then(() =>
+      res.status(200).json({ message: "Email sent successfully!" }),
+    );
   } catch (error) {
     console.error(error);
     res.status(500).send("Failed to send email");
